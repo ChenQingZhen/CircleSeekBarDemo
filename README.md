@@ -34,4 +34,4 @@ like this:
     ```
     
 ![image](https://github.com/ChenQingZhen/CircleSeekBarDemo/blob/master/Screenshot/Screenshot_custom.png)
-  
+  <br/>
