@@ -31,7 +31,7 @@ like this:
         app:point_radius="24dp"
         android:background="@android:color/holo_green_light"
         />
-    ```
+```
     
 ![image](https://github.com/ChenQingZhen/CircleSeekBarDemo/blob/master/Screenshot/Screenshot_custom.png)
   <br/>
