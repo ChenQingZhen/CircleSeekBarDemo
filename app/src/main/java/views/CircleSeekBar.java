@@ -16,7 +16,7 @@ import android.view.View;
 
 public class CircleSeekBar extends View
 {
-    private static final double RADIAN=180/Math.PI;
+    private static final double RADIAN = 180 / Math.PI;
     //半径
     private int mRadius;
     //画弧的笔
@@ -28,16 +28,16 @@ public class CircleSeekBar extends View
     //小圆点的Y坐标
     private float mPointY;
     //弧线宽度
-    private int mArcWidth=20;
+    private int mArcWidth = 20;
     //起始角度,绘制的时候会用到
-    private int mStartAngle =135;
+    private int mStartAngle = 135;
 
     //初始角度
     private int mCalculateStartAngle;
     //最大角度
-    private int mMaxAngle =270;
+    private int mMaxAngle = 270;
     //当前的角度
-    private int mCurrentAngle=0;
+    private float mCurrentAngle = 0;
 
 
     public CircleSeekBar(Context context)
@@ -59,13 +59,13 @@ public class CircleSeekBar extends View
     private void initView()
     {
 
-        mCalculateStartAngle = mStartAngle%90;
-        mArcPaint =new Paint(Paint.ANTI_ALIAS_FLAG);
+        mCalculateStartAngle = mStartAngle % 90;
+        mArcPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mArcPaint.setColor(Color.BLUE);
         mArcPaint.setStrokeWidth(mArcWidth);
         mArcPaint.setStyle(Paint.Style.STROKE);
         mArcPaint.setStrokeCap(Paint.Cap.ROUND);
-        mPointPaint =new Paint(Paint.ANTI_ALIAS_FLAG);
+        mPointPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPointPaint.setColor(Color.WHITE);
         mPointPaint.setStyle(Paint.Style.FILL);
         setBackgroundColor(Color.GREEN);
@@ -75,11 +75,11 @@ public class CircleSeekBar extends View
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
     {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        int width=measureWidth(widthMeasureSpec);
-        int height=measureHeight(heightMeasureSpec);
+        int width = measureWidth(widthMeasureSpec);
+        int height = measureHeight(heightMeasureSpec);
 //        //取宽度和高度的最小值
 //        int diameter=Math.min(width,height);
-        setMeasuredDimension(width,height);
+        setMeasuredDimension(width, height);
     }
 
     private int measureWidth(int widthMeasureSpec)
@@ -92,14 +92,17 @@ public class CircleSeekBar extends View
             result = specSize;
         } else
         {
-            result=30;
-            if(specMode==MeasureSpec.AT_MOST){
-                result=Math.min(result,specSize);
+            result = 30;
+            if (specMode == MeasureSpec.AT_MOST)
+            {
+                result = Math.min(result, specSize);
             }
         }
         return result;
     }
-    private int measureHeight(int heightMeasureSpec){
+
+    private int measureHeight(int heightMeasureSpec)
+    {
         return measureWidth(heightMeasureSpec);
     }
 
@@ -107,79 +110,112 @@ public class CircleSeekBar extends View
     protected void onSizeChanged(int w, int h, int oldw, int oldh)
     {
         super.onSizeChanged(w, h, oldw, oldh);
-         mRadius= Math.min(w,h)/2;
+        mRadius = Math.min(w-getPaddingLeft()-getPaddingRight(), h-getPaddingTop()-getPaddingBottom())/ 2;
+
     }
 
     @Override
     protected void onDraw(Canvas canvas)
     {
         super.onDraw(canvas);
-        RectF reactF=new RectF(0+mArcWidth,0+mArcWidth,2*mRadius-mArcWidth,2*mRadius-mArcWidth);
-        canvas.drawArc(reactF, mStartAngle,mCurrentAngle,false, mArcPaint);
-        canvas.drawCircle(mPointX,mPointY,mArcWidth/2, mPointPaint);
+        RectF reactF = new RectF(getPaddingLeft() + mArcWidth, getPaddingTop() + mArcWidth, getPaddingLeft()+2 * mRadius - mArcWidth,getPaddingTop()+ 2 * mRadius - mArcWidth);
+        canvas.drawArc(reactF, mStartAngle, mCurrentAngle, false, mArcPaint);
+        canvas.drawCircle(mPointX, mPointY, mArcWidth / 2, mPointPaint);
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event)
     {
-        int x= (int) event.getX();
-        int y= (int) event.getY();
+        float x = event.getX();
+        float y = event.getY();
 
-       switch (event.getAction()){
-           case MotionEvent.ACTION_DOWN:
-                if(!isValid(x,y)){
+        switch (event.getAction())
+        {
+            case MotionEvent.ACTION_DOWN:
+                if (!isValid(x, y))
+                {
                     return false;
                 }
-               calculateAngle(x,y);
-               break;
-           case MotionEvent.ACTION_MOVE:
-               calculateAngle(x,y);
-               break;
-           case MotionEvent.ACTION_UP:
-
-               break;
-       }
+                calculateAngle(x, y);
+                break;
+            case MotionEvent.ACTION_MOVE:
+                calculateAngle(x, y);
+                break;
+            case MotionEvent.ACTION_UP:
+               calculateAngle(x, y);
+                //添加粘性效果
+                if (mCurrentAngle <= 5)
+                {
+                    mCurrentAngle = 0;
+                }
+                break;
+        }
         invalidate();
         return true;
     }
-    private void calculateAngle(int x,int y){
-        int angle;
+
+    private void calculateAngle(float x, float y)
+    {
+        float angle;
         //斜边
-        int hypotenuse;
-        hypotenuse= (int) Math.sqrt(Math.pow(x-mRadius,2)+Math.pow(y-mRadius,2));
-        double sin=(double)(y-mRadius)/hypotenuse;
+        double hypotenuse;
+        hypotenuse = Math.sqrt(Math.pow(x - mRadius, 2) + Math.pow(y - mRadius, 2));
+        double sin = (double) (y - mRadius) / hypotenuse;
         float pointX;
         float pointY;
-        if(x-mRadius<0){
-            angle= (int) (90-Math.asin(sin)*RADIAN);
+        boolean isLeft = x - mRadius < 0;
+        if (isLeft)
+        {
+            angle = (float) (90 - Math.asin(sin) * RADIAN);
             //计算小圆点坐标
-            pointX=(float) (mRadius- (mRadius-mArcWidth)*Math.sqrt(1-sin*sin));
-            pointY= (float) (mRadius+(mRadius-mArcWidth)*sin);
-            Log.d("c_angle","left:"+angle);
-        }else{
-            angle= (int) (180+90+Math.asin(sin)*RADIAN);
+            pointX = calculatePointX(isLeft, sin);
+            pointY = calculatePointY(sin);
+            Log.d("c_angle", "left:" + angle);
+        } else
+        {
+            angle = (float) (180 + 90 + Math.asin(sin) * RADIAN);
             //计算小圆点坐标
-            pointX= (float) (mRadius+(mRadius-mArcWidth)*Math.sqrt(1-sin*sin));
-            pointY= (float) (mRadius+(mRadius-mArcWidth)*sin);
-            Log.d("c_angle","right:"+angle);
+            pointX = calculatePointX(isLeft, sin);
+            pointY = calculatePointY(sin);
+            Log.d("c_angle", "right:" + angle);
         }
-        if(angle>= mCalculateStartAngle &&angle<=mMaxAngle+ mCalculateStartAngle){
-            mCurrentAngle= angle- mCalculateStartAngle;
-            mPointX=pointX;
-            mPointY=pointY;
+        if (angle >= mCalculateStartAngle && angle <= mMaxAngle + mCalculateStartAngle)
+        {
+            mCurrentAngle = Math.round(angle - mCalculateStartAngle);
+            Log.d("cur_angle", "mCurrentAngle:" + mCurrentAngle);
+            mPointX = pointX;
+            mPointY = pointY;
         }
+    }
 
+    /**
+     * 计算小圆点的X坐标
+     *
+     * @param isLeft 判断点是否位于弧形的左半部分
+     * @param sin    #calculateAngle计算出来的sin值
+     * @return 小圆点的X坐标
+     */
+    private float calculatePointX(boolean isLeft, double sin)
+    {
+        return isLeft ? (float) (mRadius - (mRadius - mArcWidth) * Math.sqrt(1 - sin * sin))+getPaddingLeft() :
+                (float) (mRadius + (mRadius - mArcWidth) * Math.sqrt(1 - sin * sin))+getPaddingLeft();
+    }
 
+    private float calculatePointY(double sin)
+    {
+        return (float) (mRadius + (mRadius - mArcWidth) * sin)+getPaddingTop();
     }
 
 
     /**
      * 判断点是否在弧形的半径内
+     *
      * @param x
      * @param y
      * @return true在   false不在
      */
-    private boolean isValid(int x,int y){
-        return Math.pow(x-mRadius,2)+Math.pow(y-mRadius,2)<=mRadius*mRadius;
+    private boolean isValid(float x, float y)
+    {
+        return Math.pow(x - mRadius-getPaddingLeft(), 2) + Math.pow(y - mRadius-getPaddingTop(), 2) <= mRadius * mRadius;
     }
 }
