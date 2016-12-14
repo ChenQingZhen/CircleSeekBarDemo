@@ -11,7 +11,7 @@ this is default style
         android:background="@android:color/holo_green_light"
         />
 ```
-        ![image](https://github.com/ChenQingZhen/CircleSeekBarDemo/blob/master/Screenshot/Screenshot_1481703757.png)
+![image](https://github.com/ChenQingZhen/CircleSeekBarDemo/blob/master/Screenshot/Screenshot_1481703757.png)
 And you can custom style
 like this:
 
