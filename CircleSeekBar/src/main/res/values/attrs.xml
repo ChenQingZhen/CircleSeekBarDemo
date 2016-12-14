@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="CircleSeekBar">
+        <attr name="arc_width" format="dimension"/>
+        <attr name="arc_color" format="color"/>
+        <attr name="point_radius" format="dimension"/>
+        <attr name="point_color" format="color"/>
+        <attr name="start_angle" format="integer"/>
+        <attr name="max_angle" format="integer"/>
+        <attr name="current_progress" format="integer"/>
+        <attr name="max_progress" format="integer"/>
+    </declare-styleable>
+</resources>

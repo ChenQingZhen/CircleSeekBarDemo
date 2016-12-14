@@ -1,6 +1,7 @@
-package views;
+package com.cqz.mylibrary;
 
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -16,6 +17,7 @@ import android.view.View;
 
 public class CircleSeekBar extends View
 {
+    //弧度转角度
     private static final double RADIAN = 180 / Math.PI;
     //半径
     private int mRadius;
@@ -27,18 +29,29 @@ public class CircleSeekBar extends View
     private float mPointX;
     //小圆点的Y坐标
     private float mPointY;
+    //小圆点的半径
+    private float mPointRadius;
+    //小圆点的颜色
+    private int mPointColor;
     //弧线宽度
-    private int mArcWidth = 20;
+    private float mArcWidth;
+    //弧线颜色
+    private int mArcColor;
     //起始角度,绘制的时候会用到
-    private int mStartAngle = 135;
+    private int mStartAngle;
 
     //初始角度
     private int mCalculateStartAngle;
     //最大角度
-    private int mMaxAngle = 270;
+    private int mMaxAngle;
     //当前的角度
     private float mCurrentAngle = 0;
+    //当前进度值
+    private int mCurrentProgerss;
+    //最大进度值
+    private int mMaxProgress;
 
+    private OnProgressChangeListener mListener;
 
     public CircleSeekBar(Context context)
     {
@@ -53,22 +66,46 @@ public class CircleSeekBar extends View
     public CircleSeekBar(Context context, AttributeSet attrs, int defStyleAttr)
     {
         super(context, attrs, defStyleAttr);
-        initView();
+        initView(attrs, defStyleAttr);
     }
 
-    private void initView()
+    private void initView(AttributeSet attrs, int defStyleAttr)
     {
 
+
+        initAttrs(attrs, defStyleAttr);
+        initPaint();
+
+    }
+
+    private void initAttrs(AttributeSet attrs, int defStyleAttr)
+    {
+        TypedArray a = getContext().obtainStyledAttributes(attrs, R.styleable.CircleSeekBar, defStyleAttr, 0);
+        mArcWidth = a.getDimension(R.styleable.CircleSeekBar_arc_width, 20);
+        mArcColor = a.getColor(R.styleable.CircleSeekBar_arc_color, Color.BLUE);
+        mPointRadius = a.getDimension(R.styleable.CircleSeekBar_point_radius, mArcWidth / 2);
+        mPointColor = a.getColor(R.styleable.CircleSeekBar_point_color, Color.WHITE);
+        mStartAngle = a.getInt(R.styleable.CircleSeekBar_start_angle, 135);
+        mMaxAngle = a.getInt(R.styleable.CircleSeekBar_max_angle, 270);
+        mCurrentProgerss = a.getInt(R.styleable.CircleSeekBar_current_progress, 0);
+        mMaxProgress = a.getInt(R.styleable.CircleSeekBar_max_progress, 100);
+        a.recycle();
+        //处理角度偏差
         mCalculateStartAngle = mStartAngle % 90;
+    }
+
+    private void initPaint()
+    {
+        //初始化弧形的笔
         mArcPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        mArcPaint.setColor(Color.BLUE);
+        mArcPaint.setColor(mArcColor);
         mArcPaint.setStrokeWidth(mArcWidth);
         mArcPaint.setStyle(Paint.Style.STROKE);
         mArcPaint.setStrokeCap(Paint.Cap.ROUND);
+        //初始化小圆点的笔
         mPointPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        mPointPaint.setColor(Color.WHITE);
+        mPointPaint.setColor(mPointColor);
         mPointPaint.setStyle(Paint.Style.FILL);
-        setBackgroundColor(Color.GREEN);
     }
 
     @Override
@@ -122,7 +159,7 @@ public class CircleSeekBar extends View
         canvas.drawArc(reactF, mStartAngle, mCurrentAngle, false, mArcPaint);
         if (mCurrentAngle != 0)
         {
-            canvas.drawCircle(mPointX, mPointY, mArcWidth / 2, mPointPaint);
+            canvas.drawCircle(mPointX, mPointY, mPointRadius, mPointPaint);
         }
     }
 
@@ -140,9 +177,11 @@ public class CircleSeekBar extends View
                     return false;
                 }
                 calculateAngle(x, y);
+                calculateProgress();
                 break;
             case MotionEvent.ACTION_MOVE:
                 calculateAngle(x, y);
+                calculateProgress();
                 break;
             case MotionEvent.ACTION_UP:
                 calculateAngle(x, y);
@@ -151,6 +190,7 @@ public class CircleSeekBar extends View
                 {
                     mCurrentAngle = 0;
                 }
+                calculateProgress();
                 break;
         }
         invalidate();
@@ -209,6 +249,14 @@ public class CircleSeekBar extends View
         return (float) (mRadius + (mRadius - mArcWidth) * sin) + getPaddingTop();
     }
 
+    private void calculateProgress()
+    {
+        mCurrentProgerss = Math.round(mCurrentAngle / mMaxAngle * mMaxProgress);
+        if (mListener != null)
+        {
+            mListener.onProgress(mCurrentProgerss);
+        }
+    }
 
     /**
      * 判断点是否在弧形的半径内
@@ -220,5 +268,39 @@ public class CircleSeekBar extends View
     private boolean isValid(float x, float y)
     {
         return Math.pow(x - mRadius - getPaddingLeft(), 2) + Math.pow(y - mRadius - getPaddingTop(), 2) <= mRadius * mRadius;
+    }
+
+    public void setCurrentProgress(int progress)
+    {
+        if (progress > mMaxProgress)
+        {
+            throw new IllegalArgumentException("progress must < mMaxProgress");
+        }
+        mCurrentProgerss = progress;
+        mCurrentAngle = (float) mCurrentProgerss / mMaxProgress * mMaxAngle;
+        float angle = mCurrentAngle + mCalculateStartAngle;
+        //与calculateAngle方法求sin值相反
+        boolean isLeft = angle <= 180;
+        if (isLeft)
+        {
+            mPointX = calculatePointX(isLeft, Math.sin((90 - angle) / RADIAN));
+            mPointY = calculatePointY(Math.sin((90 - angle) / RADIAN));
+        } else
+        {
+            mPointX = calculatePointX(isLeft, Math.sin((angle - 180 - 90) / RADIAN));
+            mPointY = calculatePointY(Math.sin((angle - 180 - 90) / RADIAN));
+        }
+
+        invalidate();
+    }
+
+    public void setOnProgressChangeListener(OnProgressChangeListener listener)
+    {
+        this.mListener = listener;
+    }
+
+    public interface OnProgressChangeListener
+    {
+        void onProgress(int progress);
     }
 }
