@@ -110,7 +110,7 @@ public class CircleSeekBar extends View
     protected void onSizeChanged(int w, int h, int oldw, int oldh)
     {
         super.onSizeChanged(w, h, oldw, oldh);
-        mRadius = Math.min(w-getPaddingLeft()-getPaddingRight(), h-getPaddingTop()-getPaddingBottom())/ 2;
+        mRadius = Math.min(w - getPaddingLeft() - getPaddingRight(), h - getPaddingTop() - getPaddingBottom()) / 2;
 
     }
 
@@ -118,9 +118,12 @@ public class CircleSeekBar extends View
     protected void onDraw(Canvas canvas)
     {
         super.onDraw(canvas);
-        RectF reactF = new RectF(getPaddingLeft() + mArcWidth, getPaddingTop() + mArcWidth, getPaddingLeft()+2 * mRadius - mArcWidth,getPaddingTop()+ 2 * mRadius - mArcWidth);
+        RectF reactF = new RectF(getPaddingLeft() + mArcWidth, getPaddingTop() + mArcWidth, getPaddingLeft() + 2 * mRadius - mArcWidth, getPaddingTop() + 2 * mRadius - mArcWidth);
         canvas.drawArc(reactF, mStartAngle, mCurrentAngle, false, mArcPaint);
-        canvas.drawCircle(mPointX, mPointY, mArcWidth / 2, mPointPaint);
+        if (mCurrentAngle != 0)
+        {
+            canvas.drawCircle(mPointX, mPointY, mArcWidth / 2, mPointPaint);
+        }
     }
 
     @Override
@@ -142,7 +145,7 @@ public class CircleSeekBar extends View
                 calculateAngle(x, y);
                 break;
             case MotionEvent.ACTION_UP:
-               calculateAngle(x, y);
+                calculateAngle(x, y);
                 //添加粘性效果
                 if (mCurrentAngle <= 5)
                 {
@@ -197,13 +200,13 @@ public class CircleSeekBar extends View
      */
     private float calculatePointX(boolean isLeft, double sin)
     {
-        return isLeft ? (float) (mRadius - (mRadius - mArcWidth) * Math.sqrt(1 - sin * sin))+getPaddingLeft() :
-                (float) (mRadius + (mRadius - mArcWidth) * Math.sqrt(1 - sin * sin))+getPaddingLeft();
+        return isLeft ? (float) (mRadius - (mRadius - mArcWidth) * Math.sqrt(1 - sin * sin)) + getPaddingLeft() :
+                (float) (mRadius + (mRadius - mArcWidth) * Math.sqrt(1 - sin * sin)) + getPaddingLeft();
     }
 
     private float calculatePointY(double sin)
     {
-        return (float) (mRadius + (mRadius - mArcWidth) * sin)+getPaddingTop();
+        return (float) (mRadius + (mRadius - mArcWidth) * sin) + getPaddingTop();
     }
 
 
@@ -216,6 +219,6 @@ public class CircleSeekBar extends View
      */
     private boolean isValid(float x, float y)
     {
-        return Math.pow(x - mRadius-getPaddingLeft(), 2) + Math.pow(y - mRadius-getPaddingTop(), 2) <= mRadius * mRadius;
+        return Math.pow(x - mRadius - getPaddingLeft(), 2) + Math.pow(y - mRadius - getPaddingTop(), 2) <= mRadius * mRadius;
     }
 }
